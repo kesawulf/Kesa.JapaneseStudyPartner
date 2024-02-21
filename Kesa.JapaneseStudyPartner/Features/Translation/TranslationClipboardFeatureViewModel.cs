@@ -1,5 +1,6 @@
 ﻿using Google.Cloud.Vision.V1;
 using Kesa.Japanese.Common;
+using Kesa.JapaneseStudyPartner.Features.Translation;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -18,7 +19,7 @@ public class TranslationClipboardFeatureViewModel : ViewModelBase
 
     public TranslationClipboardFeatureViewModel()
     {
-        ClipboardWatcher.ClipboardChanged += OnClipboardChanged;
+        TranslationClipboardMonitor.ClipboardChanged += OnClipboardChanged;
     }
 
     protected override void HandleIsWindowFocusedChanged(bool value)
