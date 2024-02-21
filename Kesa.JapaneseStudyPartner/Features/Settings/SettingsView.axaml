@@ -13,7 +13,7 @@
 
 	<Grid RowDefinitions="Auto,*,Auto" Margin="10">
 		<ScrollViewer Grid.Row="1" >
-			<StackPanel Spacing="5" Grid.Row="0" Orientation="Vertical">
+			<StackPanel Spacing="5" Orientation="Vertical">
 				<TextBlock Text="Google Credentials File Path"/>
 				<DockPanel>
 					<Button
@@ -27,19 +27,21 @@
                              Text="{Binding CurrentGoogleCredentialsFilePath}"/>
 				</DockPanel>
 
+                <TextBlock Text="DeepL API Key"/>
+                <TextBox VerticalAlignment="Center"
+                         FontSize="16"
+                         PasswordChar="*"
+                         Text="{Binding CurrentDeepLApiKey}"/>
+
 				<TextBlock Text="WaniKani API Key"/>
+				<TextBlock Text="(unused)" Foreground="OrangeRed"/>
 				<TextBox VerticalAlignment="Center"
 						 FontSize="16"
 						 PasswordChar="*"
 						 Text="{Binding CurrentWaniKaniApiKey}"/>
 
-				<TextBlock Text="DeepL API Key"/>
-				<TextBox VerticalAlignment="Center"
-						 FontSize="16"
-						 PasswordChar="*"
-						 Text="{Binding CurrentDeepLApiKey}"/>
-
 				<TextBlock Text="Sapling API Key"/>
+                <TextBlock Text="(unused)" Foreground="OrangeRed"/>
 				<TextBox VerticalAlignment="Center"
 						 FontSize="16"
 						 PasswordChar="*"
