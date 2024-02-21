@@ -16,13 +16,9 @@ I will not be setting up a backend service for this so you will have to obtain t
 
 ##### Required Google Cloud APIs
 
-Pretty technical stuff follows. These are awful instructions, and I apologise.
-
- You will need to create your own project [here](https://console.cloud.google.com/projectcreate). After that finishes, ensure you select the project in your [dashboard](https://console.cloud.google.com/home/dashboard), then, go to the following pages and hit "Enable"
+ Because I am not hosting my own backend, you will need to create your own Google Cloud API project with the following APIs enabled:
 - [Cloud Vision API](https://console.cloud.google.com/apis/api/vision.googleapis.com/overview)
 - [Cloud Speech-to-Text API](https://console.cloud.google.com/apis/api/speech.googleapis.com/overview)
-
-After enabling these APIs, you can go [here](https://console.cloud.google.com/welcome?cloudshell=true), which will open up a console at the bottom of the screen. Type in `gcloud auth application-default login` and go through the prompts. This will put the API credentials file into a temporary directory inside the virtual machine the console is running in and print it to the console, something like `/tmp/tmp29471947h1/application_default_settings.json`. You will then enter a command to move this file, `mv /tmp/tmp29471947h1/application_default_settings.json ~`, where you can then click the download button to download a zip you need to extract that json file from, and put anywhere. You can then go into the study partner settings and find that json file in there.
 
 ##### DeepL API
 
