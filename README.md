@@ -16,7 +16,9 @@ I will not be setting up a backend service for this so you will have to obtain t
 
 ##### Required Google Cloud APIs
 
-Pretty technical stuff follows. You will need to create your own project [here](https://console.cloud.google.com/projectcreate). After that finishes, ensure you select the project in your [dashboard](https://console.cloud.google.com/home/dashboard), then, go to the following pages and hit "Enable"
+Pretty technical stuff follows. These are awful instructions, and I apologise.
+
+ You will need to create your own project [here](https://console.cloud.google.com/projectcreate). After that finishes, ensure you select the project in your [dashboard](https://console.cloud.google.com/home/dashboard), then, go to the following pages and hit "Enable"
 - [Cloud Vision API](https://console.cloud.google.com/apis/api/vision.googleapis.com/overview)
 - [Cloud Speech-to-Text API](https://console.cloud.google.com/apis/api/speech.googleapis.com/overview)
 
