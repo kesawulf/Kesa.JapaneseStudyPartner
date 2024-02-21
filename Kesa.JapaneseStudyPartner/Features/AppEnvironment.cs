@@ -10,9 +10,25 @@ using System.IO;
 
 namespace Kesa.Japanese.Features;
 
+internal interface IAppMessageBusMessage;
+
+internal class AppMessageBusMessage<TMessage> : IAppMessageBusMessage
+{
+    public TMessage Message { get; set; }
+}
+
+internal class AppMessageBusMessage<TMessage, TValue> : IAppMessageBusMessage
+{
+    public TMessage Message { get; set; }
+
+    public TValue Value { get; set; }
+}
+
 internal static class AppEnvironment
 {
     public static event Action Initialized;
+
+    public static event Action<IAppMessageBusMessage> MessageReceived;
 
     private static bool _isFirstInitialization = true;
 
@@ -68,6 +84,17 @@ internal static class AppEnvironment
         {
             Initialized?.Invoke();
         }
+    }
+
+    public static void SendMessage<TMessage>(TMessage message)
+    {
+        MessageReceived?.Invoke(new AppMessageBusMessage<TMessage>() { Message = message });
+    }
+
+    public static void SendMessage<TMessage, TValue>(TMessage messageType, TValue value)
+    {
+        var message = new AppMessageBusMessage<TMessage, TValue>() { Message = messageType, Value = value };
+        MessageReceived?.Invoke(message);
     }
 }
 

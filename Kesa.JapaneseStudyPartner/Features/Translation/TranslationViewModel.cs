@@ -1,14 +1,6 @@
-﻿using Avalonia.Svg.Skia;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using Google.Cloud.Speech.V1;
-using Google.Cloud.Vision.V1;
-using Google.Protobuf;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Kesa.Japanese.Common;
-using NAudio.Wave;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -17,16 +9,6 @@ namespace Kesa.Japanese.Features.Translation;
 
 public partial class TranslationViewModel : ViewModelBase
 {
-    private Stopwatch _lastClipboardEditTime = Stopwatch.StartNew();
-    private byte[] _lastClipboardImageContents;
-
-    private readonly object _micLock = new();
-    private readonly Queue<ByteString> _micQueue = [];
-    private SpeechClient.StreamingRecognizeStream _activeCall;
-    private WaveInEvent _micSource;
-    private MicStates _micState;
-    private int _micVersion;
-
     [ObservableProperty]
     private string _pronunciationText;
 
@@ -67,51 +49,44 @@ public partial class TranslationViewModel : ViewModelBase
         }
     }
 
-    public enum MicStates
-    {
-        None,
-        NotRecording,
-        Changing,
-        Recording,
-    }
+    [ObservableProperty]
+    private TranslationMicrophoneFeatureViewModel _microphoneFeature;
 
-    public MicStates MicState
-    {
-        get => _micState;
-        set
-        {
-            if (SetProperty(ref _micState, value))
-            {
-                OnPropertyChanged(nameof(MicImage));
-            }
-        }
-    }
-
-    public SvgImage MicImage
-    {
-        get
-        {
-            var image = new SvgImage();
-            var svg = new SvgSource();
-
-            var path = _micState switch
-            {
-                MicStates.None or MicStates.NotRecording => "Assets.Icons.Mic.svg",
-                MicStates.Changing => "Assets.Icons.MicChanging.svg",
-                MicStates.Recording => "Assets.Icons.MicActive.svg",
-                _ => throw new ArgumentOutOfRangeException()
-            };
-
-            svg.Load(Utilities.GetEmbeddedResourceStream(path));
-            image.Source = svg;
-            return image;
-        }
-    }
+    [ObservableProperty]
+    private TranslationClipboardFeatureViewModel _clipboardFeature;
 
     public TranslationViewModel()
     {
-        ClipboardWatcher.ClipboardChanged += async (_, _) => await OnClipboardChanged();
         ReloadServices(true);
+        AppEnvironment.MessageReceived += OnMessageBusMessageReceived;
+    }
+
+    private void OnMessageBusMessageReceived(IAppMessageBusMessage messageInfo)
+    {
+        Action handler = messageInfo switch
+        {
+            AppMessageBusMessage<TranslationMicrophoneFeatureMessages, string> message => () => ProcessMicrophoneFeatureMessage(message),
+            AppMessageBusMessage<TranslationClipboardFeatureMessages, string> message => () => ProcessClipboardFeatureMessages(message),
+            _ => null,
+        };
+
+        handler?.Invoke();
+
+        void ProcessMicrophoneFeatureMessage(AppMessageBusMessage<TranslationMicrophoneFeatureMessages, string> typedMessageInfo)
+        {
+            if (typedMessageInfo.Message == TranslationMicrophoneFeatureMessages.MicrophoneInputReceived)
+            {
+                InputText = typedMessageInfo.Value;
+            }
+        }
+
+        void ProcessClipboardFeatureMessages(AppMessageBusMessage<TranslationClipboardFeatureMessages, string> typedMessageInfo)
+        {
+            if (typedMessageInfo.Message == TranslationClipboardFeatureMessages.ClipboardImageTextReceived)
+            {
+                InputText = typedMessageInfo.Value;
+            }
+        }
     }
 
     public void ReloadServices(bool isInitialLoad)
@@ -124,146 +99,16 @@ public partial class TranslationViewModel : ViewModelBase
             {
                 ConfigureIpaDict();
 
-                _micSource = new WaveInEvent();
-                _micSource.WaveFormat = new WaveFormat(16000, 1);
-                _micSource.DataAvailable += async (_, args) =>
-                {
-                    lock (_micLock)
-                    {
-                        _micQueue.Enqueue(ByteString.CopyFrom(args.Buffer, 0, args.BytesRecorded));
-                    }
-
-                    await Task.Yield();
-                };
+                MicrophoneFeature = new TranslationMicrophoneFeatureViewModel();
+                ClipboardFeature = new TranslationClipboardFeatureViewModel();
             }
             else
             {
-                await StopRecordingAsync();
+                await MicrophoneFeature.StopRecordingAsync();
             }
 
-            MicState = MicStates.NotRecording;
             LoadingTranslationService = false;
         });
-    }
-
-    [RelayCommand]
-    public void ToggleRecording()
-    {
-        if (MicState == MicStates.Recording)
-        {
-            Task.Factory.StartNew(StopRecordingAsync);
-        }
-        else if (MicState == MicStates.NotRecording)
-        {
-            Task.Factory.StartNew(StartRecordingAsync);
-        }
-    }
-
-    private async Task StopRecordingAsync()
-    {
-        if (MicState != MicStates.Recording)
-        {
-            return;
-        }
-
-        MicState = MicStates.Changing;
-
-        lock (_micLock)
-        {
-            _micSource.StopRecording();
-            _micQueue.Clear();
-            _micVersion++;
-        }
-
-        await _activeCall.WriteCompleteAsync();
-        _activeCall = null;
-        MicState = MicStates.NotRecording;
-    }
-
-    private async Task StartRecordingAsync()
-    {
-        if (MicState != MicStates.NotRecording)
-        {
-            return;
-        }
-
-        MicState = MicStates.Changing;
-        _activeCall = AppEnvironment.SpeechClient.StreamingRecognize();
-
-        await _activeCall.WriteAsync(new StreamingRecognizeRequest()
-        {
-            StreamingConfig = new StreamingRecognitionConfig()
-            {
-                Config = new RecognitionConfig()
-                {
-                    Encoding = RecognitionConfig.Types.AudioEncoding.Linear16,
-                    SampleRateHertz = 16000,
-                    LanguageCode = "ja-JP",
-                    Model = "default",
-                },
-                InterimResults = true,
-            }
-        });
-
-        var version = _micVersion;
-        _ = Task.Factory.StartNew(HandleReceivedSpeechToText);
-
-        _micSource.StartRecording();
-        MicState = MicStates.Recording;
-
-        while (_micVersion == version)
-        {
-            ByteString data;
-
-            lock (_micLock)
-            {
-                _micQueue.TryDequeue(out data);
-            }
-
-            if (data != null)
-            {
-                try
-                {
-                    await _activeCall?.WriteAsync(new StreamingRecognizeRequest() { AudioContent = data });
-                }
-                catch
-                {
-                    lock (_micLock)
-                    {
-                        _micQueue.Clear();
-                    }
-                }
-            }
-        }
-    }
-
-    private async Task HandleReceivedSpeechToText()
-    {
-        var stream = _activeCall.GetResponseStream();
-        var fullText = "";
-
-        while (await stream.MoveNextAsync())
-        {
-            foreach (var result in stream.Current.Results)
-            {
-                var text = result.Alternatives.First().Transcript;
-                string currentGuess;
-
-                if (result.IsFinal)
-                {
-                    fullText += text;
-                    currentGuess = "";
-                }
-                else
-                {
-                    currentGuess = text;
-                }
-
-                InputText = fullText + currentGuess;
-            }
-        }
-
-        InputText = fullText;
     }
 
     public static void ConfigureIpaDict()
@@ -314,52 +159,5 @@ public partial class TranslationViewModel : ViewModelBase
         }
 
         OutputText = response;
-    }
-
-    protected override void HandleIsWindowFocusedChanged(bool value)
-    {
-        if (value && _lastClipboardEditTime.IsRunning && _lastClipboardEditTime.Elapsed.TotalSeconds < 5 && _lastClipboardImageContents != null)
-        {
-            ProcessClipboardImageContents();
-        }
-    }
-
-    private async Task OnClipboardChanged()
-    {
-        _lastClipboardEditTime.Stop();
-
-        if (await AppEnvironment.MainWindow.Clipboard!.GetDataAsync("PNG") is byte[] clipboardImageData)
-        {
-            _lastClipboardImageContents = clipboardImageData;
-
-            if (IsWindowFocused)
-            {
-                ProcessClipboardImageContents();
-            }
-            else
-            {
-                _lastClipboardEditTime.Restart();
-            }
-        }
-    }
-
-    private void ProcessClipboardImageContents()
-    {
-        if (_lastClipboardImageContents is { } contents)
-        {
-            _lastClipboardImageContents = null;
-
-            using var ms = new MemoryStream(contents);
-
-            var request = new AnnotateImageRequest();
-            request.Image = Image.FromStream(ms);
-            request.Features.Add(new Feature() { Type = Feature.Types.Type.TextDetection });
-
-            var response = AppEnvironment.AnnotationClient.Annotate(request);
-            if (response.FullTextAnnotation is { } result)
-            {
-                InputText = result.Text;
-            }
-        }
     }
 }

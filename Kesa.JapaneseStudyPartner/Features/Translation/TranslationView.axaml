@@ -16,14 +16,14 @@
                      TextWrapping="WrapWithOverflow"
                      Text="{Binding InputText}" />
 			<TextBlock Grid.Column="0" Margin="8" HorizontalAlignment="Right" VerticalAlignment="Bottom" Text="Input" />
-			<Button Grid.Column="1" Margin="0,4,4,4" Command="{Binding ToggleRecordingCommand}">
-                <Image Source="{Binding MicImage}"/>
+			<Button Grid.Column="1" Margin="0,4,4,4" Command="{Binding MicrophoneFeature.ToggleRecordingCommand}">
+                <Image Source="{Binding MicrophoneFeature.MicrophoneImage}"/>
             </Button>
         </Grid>
 
         <TextBox Grid.Row="1" Margin="4" AcceptsReturn="True" ScrollViewer.VerticalScrollBarVisibility="Auto"
                  TextWrapping="WrapWithOverflow"
-                 IsReadOnly="True" IsEnabled="{Binding PronunciationTextVisible}" Text="{Binding PronunciationText}" />
+                 IsReadOnly="True" Text="{Binding PronunciationText}" />
         <TextBlock Grid.Row="1" Margin="8" HorizontalAlignment="Right" VerticalAlignment="Bottom" Text="Pronunciation" />
 
         <TextBox Grid.Row="2" Margin="4" AcceptsReturn="True" ScrollViewer.VerticalScrollBarVisibility="Auto"
