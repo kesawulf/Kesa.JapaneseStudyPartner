@@ -1,0 +1,65 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows7.0</TargetFramework>
+    <UseWindowsForms>False</UseWindowsForms>
+    <UseWPF>False</UseWPF>
+    <StartupObject></StartupObject>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>disable</Nullable>
+    <Platforms>AnyCPU;x64</Platforms>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\JMDict\char.bin">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Assets\JMDict\matrix.bin">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Assets\JMDict\sys.dic">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Assets\JMDict\unk.dic">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <None Remove="Assets\Icons\Mic.svg" />
+    <EmbeddedResource Include="Assets\Icons\Mic.svg" />
+    <None Remove="Assets\Icons\MicActive.svg" />
+    <EmbeddedResource Include="Assets\Icons\MicActive.svg" />
+    <None Remove="Assets\Icons\MicChanging.svg" />
+    <EmbeddedResource Include="Assets\Icons\MicChanging.svg" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.0.5" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.0.5" />
+    <PackageReference Include="Avalonia.Diagnostics" Version="11.0.5" />
+    <PackageReference Include="Avalonia.Svg.Skia" Version="11.0.0.3" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.5" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
+    <PackageReference Include="DeepL.net" Version="1.7.1" />
+    <PackageReference Include="Google.Cloud.Speech.V1" Version="3.4.0" />
+    <PackageReference Include="Google.Cloud.Translation.V2" Version="3.2.0" />
+    <PackageReference Include="Google.Cloud.Vision.V1" Version="3.3.0" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.54" />
+    <PackageReference Include="Kawazu" Version="1.1.4" GeneratePathProperty="true" />
+    <PackageReference Include="Microsoft.Windows.CsWin32" Version="0.3.49-beta">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="morelinq" Version="4.1.0" />
+    <PackageReference Include="NAudio" Version="2.2.1" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Folder Include="Assets\JMDict\" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <None Include="..\.editorconfig" Link=".editorconfig" />
+  </ItemGroup>
+  
+</Project>

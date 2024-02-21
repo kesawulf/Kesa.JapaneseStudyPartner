@@ -1,0 +1,59 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:localApp="using:Kesa.Japanese.Common"
+             x:Class="Kesa.Japanese.App">
+	<Application.DataTemplates>
+		<localApp:ViewLocator/>
+	</Application.DataTemplates>
+	
+	<Application.Resources>
+		<SolidColorBrush x:Key="ActiveButtonColor" Color="#508EE6"/>
+		<SolidColorBrush x:Key="InactiveButtonColor" Color="#2E2E3A"/>
+		
+		<SolidColorBrush x:Key="StandardForegroundColor" Color="#EFEFEF"/>
+		<SolidColorBrush x:Key="StandardBackgroundColor" Color="#2E2E3A"/>
+
+		
+	</Application.Resources>
+	
+	<Application.Styles>
+		<SimpleTheme/>
+		
+		<Style Selector="Window">
+			<Setter Property="Background" Value="{StaticResource StandardBackgroundColor}"/>
+		</Style>
+
+		<Style Selector="Grid">
+			<Setter Property="Background" Value="{StaticResource StandardBackgroundColor}"/>
+		</Style>
+
+		<Style Selector="ScrollViewer">
+			<Setter Property="Background" Value="{StaticResource StandardBackgroundColor}"/>
+		</Style>
+
+		<Style Selector="ScrollViewer">
+			<Setter Property="Background" Value="{StaticResource StandardBackgroundColor}"/>
+		</Style>
+
+		<Style Selector="ScrollBar">
+            <Setter Property="Background" Value="{StaticResource StandardBackgroundColor}"/>
+        </Style>
+
+		<Style Selector="TextBlock">
+			<Setter Property="Foreground" Value="{StaticResource StandardForegroundColor}"/>
+		</Style>
+		
+		<Style Selector="Button, TextBox, SplitView, Window, ListBox, ListBoxItem">
+			<Setter Property="Background" Value="{StaticResource StandardBackgroundColor}"/>
+			<Setter Property="Foreground" Value="{StaticResource StandardForegroundColor}"/>
+		</Style>
+
+		<Style Selector="TextBox, ListBoxItem">
+			<Setter Property="FontSize" Value="20"/>
+		</Style>
+
+        <Style Selector="TextBox">
+            <Setter Property="CaretBrush" Value="White"/>
+        </Style>
+	</Application.Styles>
+</Application>

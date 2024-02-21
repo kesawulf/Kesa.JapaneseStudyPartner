@@ -1,0 +1,11 @@
+﻿GetWindowLongPtr
+SetWindowLongPtr
+SetParent
+AddClipboardFormatListener
+LRESULT
+WPARAM
+LPARAM
+CallWindowProc
+CallNextHookEx
+SetWindowSubclass
+DefSubclassProc
