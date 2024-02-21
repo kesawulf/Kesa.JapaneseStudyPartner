@@ -38,10 +38,9 @@ public abstract class DisposableBase : IDisposable
             {
                 _cancellationTokenSource.Dispose();
                 _cancellationTokenSource = null;
-
-
-                OnDispose(disposeManagedObjects);
             }
+
+            OnDispose(disposeManagedObjects);
         }
     }
 
