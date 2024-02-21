@@ -12,7 +12,11 @@ namespace Kesa.Japanese.Features;
 
 internal static class AppEnvironment
 {
+    public static event Action Initialized;
+
     private static bool _isFirstInitialization = true;
+
+    public static bool IsInitialized => _isFirstInitialization == false;
 
     #region Third Party APIs
     public static DeepLClient DeepLClient { get; private set; }
@@ -34,9 +38,12 @@ internal static class AppEnvironment
 
     public static void Initialize(MainWindow mainWindow)
     {
+        var wasFirstInitialization = false;
+
         if (_isFirstInitialization)
         {
             _isFirstInitialization = false;
+            wasFirstInitialization = true;
 
             MainWindow = mainWindow;
 
@@ -56,6 +63,11 @@ internal static class AppEnvironment
         DeepLClient.ApiKey = Settings.DeepLApiKey;
 
         ClipboardWatcher.Initialize();
+
+        if (wasFirstInitialization)
+        {
+            Initialized?.Invoke();
+        }
     }
 }
 

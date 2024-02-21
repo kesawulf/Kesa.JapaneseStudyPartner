@@ -10,13 +10,17 @@ namespace Kesa.Japanese.Features.Main;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
-    public TranslationViewModel TranslationViewModel { get; private set; }
+    [ObservableProperty]
+    public TranslationViewModel _translationViewModel;
 
-    public DictionaryViewModel DictionaryViewModel { get; private set; }
+    [ObservableProperty]
+    public DictionaryViewModel _dictionaryViewModel;
 
-    public SentencesViewModel SentencesViewModel { get; private set; }
+    [ObservableProperty]
+    public SentencesViewModel _sentencesViewModel;
 
-    public SettingsViewModel SettingsViewModel { get; private set; }
+    [ObservableProperty]
+    public SettingsViewModel _settingsViewModel;
 
     [ObservableProperty]
     private ViewModelBase _currentPage;
@@ -27,11 +31,6 @@ public partial class MainWindowViewModel : ViewModelBase
         DictionaryViewModel = new DictionaryViewModel();
         SentencesViewModel = new SentencesViewModel();
         SettingsViewModel = new SettingsViewModel();
-
-        OnPropertyChanged(nameof(TranslationViewModel));
-        OnPropertyChanged(nameof(DictionaryViewModel));
-        OnPropertyChanged(nameof(SentencesViewModel));
-        OnPropertyChanged(nameof(SettingsViewModel));
 
         CurrentPage = TranslationViewModel;
     }

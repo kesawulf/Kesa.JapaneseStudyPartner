@@ -8,6 +8,7 @@ using Kesa.Japanese.Common;
 using NAudio.Wave;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -16,6 +17,9 @@ namespace Kesa.Japanese.Features.Translation;
 
 public partial class TranslationViewModel : ViewModelBase
 {
+    private Stopwatch _lastClipboardEditTime = Stopwatch.StartNew();
+    private byte[] _lastClipboardImageContents;
+
     private readonly object _micLock = new();
     private readonly Queue<ByteString> _micQueue = [];
     private SpeechClient.StreamingRecognizeStream _activeCall;
@@ -106,7 +110,7 @@ public partial class TranslationViewModel : ViewModelBase
 
     public TranslationViewModel()
     {
-        ClipboardWatcher.ClipboardChanged += async (s, e) => await OnClipboardChanged();
+        ClipboardWatcher.ClipboardChanged += async (_, _) => await OnClipboardChanged();
         ReloadServices(true);
     }
 
@@ -122,11 +126,11 @@ public partial class TranslationViewModel : ViewModelBase
 
                 _micSource = new WaveInEvent();
                 _micSource.WaveFormat = new WaveFormat(16000, 1);
-                _micSource.DataAvailable += async (s, e) =>
+                _micSource.DataAvailable += async (_, args) =>
                 {
                     lock (_micLock)
                     {
-                        _micQueue.Enqueue(ByteString.CopyFrom(e.Buffer, 0, e.BytesRecorded));
+                        _micQueue.Enqueue(ByteString.CopyFrom(args.Buffer, 0, args.BytesRecorded));
                     }
 
                     await Task.Yield();
@@ -312,11 +316,40 @@ public partial class TranslationViewModel : ViewModelBase
         OutputText = response;
     }
 
+    protected override void HandleIsWindowFocusedChanged(bool value)
+    {
+        if (value && _lastClipboardEditTime.IsRunning && _lastClipboardEditTime.Elapsed.TotalSeconds < 5 && _lastClipboardImageContents != null)
+        {
+            ProcessClipboardImageContents();
+        }
+    }
+
     private async Task OnClipboardChanged()
     {
-        if (await AppEnvironment.MainWindow.Clipboard.GetDataAsync("PNG") is byte[] clipboardImageData)
+        _lastClipboardEditTime.Stop();
+
+        if (await AppEnvironment.MainWindow.Clipboard!.GetDataAsync("PNG") is byte[] clipboardImageData)
         {
-            using var ms = new MemoryStream(clipboardImageData);
+            _lastClipboardImageContents = clipboardImageData;
+
+            if (IsWindowFocused)
+            {
+                ProcessClipboardImageContents();
+            }
+            else
+            {
+                _lastClipboardEditTime.Restart();
+            }
+        }
+    }
+
+    private void ProcessClipboardImageContents()
+    {
+        if (_lastClipboardImageContents is { } contents)
+        {
+            _lastClipboardImageContents = null;
+
+            using var ms = new MemoryStream(contents);
 
             var request = new AnnotateImageRequest();
             request.Image = Image.FromStream(ms);
