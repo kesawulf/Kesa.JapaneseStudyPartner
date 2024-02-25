@@ -1,43 +1,34 @@
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:avext="clr-namespace:Kesa.Japanese.AvaloniaExtensions"
-        xmlns:vm="clr-namespace:Kesa.Japanese.Features.Main"
-        mc:Ignorable="d" d:DesignWidth="350" d:DesignHeight="215"
-		MinWidth="350" MinHeight="215"
-		Width="600" Height="400"
-        x:Class="Kesa.Japanese.Features.Main.MainWindow"
-        Title="Japanese Study Partner">
+<windowing:AppWindow xmlns="https://github.com/avaloniaui"
+                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                     xmlns:avext="clr-namespace:Kesa.Japanese.AvaloniaExtensions"
+                     xmlns:vm="clr-namespace:Kesa.Japanese.Features.Main"
+                     xmlns:windowing="clr-namespace:FluentAvalonia.UI.Windowing;assembly=FluentAvalonia"
+                     xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+                     mc:Ignorable="d" d:DesignWidth="350" d:DesignHeight="215"
+                     MinWidth="400" MinHeight="215"
+                     Width="600" Height="400"
+                     x:Class="Kesa.Japanese.Features.Main.MainWindow"
+                     x:DataType="vm:MainWindowViewModel"
+                     Loaded="Control_OnLoaded"
+                     Title="Japanese Study Partner">
 
 	<Design.DataContext>
 		<vm:MainWindowViewModel/>
 	</Design.DataContext>
-	
-	<Grid ColumnDefinitions="80,*">
-		<Grid Grid.Column="0" RowDefinitions="Auto,Auto,Auto,*,Auto" Margin="4,4,0,4">
-			<Button Grid.Row="0" Content="Translation" BorderThickness="1,1,0,0"
-			        Command="{Binding SetPage}" CommandParameter="{Binding TranslationViewModel}"
-			        Background="{avext:ValueComparison
-					    Current={Binding CurrentPage}, 
-						Desired= {Binding TranslationViewModel},
-						EqualValue={StaticResource ActiveButtonColor}, 
-						NotEqualValue={StaticResource InactiveButtonColor}}"/>
-			
-            <Button Grid.Row="1" Content="Dictionary" BorderThickness="1,1,0,0"
-                    Command="{Binding SetPage}" CommandParameter="{Binding DictionaryViewModel}"
-                    Background="{avext:ValueComparison Current={Binding CurrentPage}, Desired= {Binding DictionaryViewModel}, EqualValue={StaticResource ActiveButtonColor}, NotEqualValue={StaticResource InactiveButtonColor}}"/>
-			
-            <Button Grid.Row="2" Content="Sentences" BorderThickness="1,1,0,1"
-                    Command="{Binding SetPage}" CommandParameter="{Binding SentencesViewModel}"
-                    Background="{avext:ValueComparison Current={Binding CurrentPage}, Desired= {Binding SentencesViewModel}, EqualValue={StaticResource ActiveButtonColor}, NotEqualValue={StaticResource InactiveButtonColor}}"/>
-			
-            <Button Grid.Row="4" Content="Settings" BorderThickness="1,1,0,1"
-                    Command="{Binding SetPage}" CommandParameter="{Binding SettingsViewModel}"
-                    Background="{avext:ValueComparison Current={Binding CurrentPage}, Desired= {Binding SettingsViewModel}, EqualValue={StaticResource ActiveButtonColor}, NotEqualValue={StaticResource InactiveButtonColor}}"/>
-		</Grid>
-		<Border Grid.Column="1" BorderThickness="1" BorderBrush="Gray">
-			<TransitioningContentControl Content="{Binding CurrentPage}"/>
-		</Border>
-	</Grid>
-</Window>
+
+	<controls:NavigationView 
+        x:Name="Navigation" 
+        ItemInvoked="Navigation_OnItemInvoked" 
+        PaneDisplayMode="Left" 
+        IsPaneToggleButtonVisible="False"
+        OpenPaneLength="130">
+		<controls:NavigationView.MenuItems>
+			<controls:NavigationViewItem Content="Translation" Tag="{Binding TranslationViewModel}"/>
+			<controls:NavigationViewItem Content="Dictionary" Tag="{Binding DictionaryViewModel}"/>
+			<controls:NavigationViewItem Content="Sentences" Tag="{Binding SentencesViewModel}"/>
+		</controls:NavigationView.MenuItems>
+        <controls:Frame Content="{Binding CurrentPage}"/>
+	</controls:NavigationView>
+</windowing:AppWindow>

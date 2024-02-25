@@ -4,6 +4,7 @@ using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
 using Kesa.Japanese.Features;
 using Kesa.Japanese.Features.Main;
+using Kesa.JapaneseStudyPartner.Features.Translation;
 
 namespace Kesa.Japanese;
 
@@ -16,7 +17,7 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
-        RequestedThemeVariant = Avalonia.Styling.ThemeVariant.Light;
+        RequestedThemeVariant = Avalonia.Styling.ThemeVariant.Dark;
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
@@ -34,5 +35,7 @@ public partial class App : Application
         }
 
         base.OnFrameworkInitializationCompleted();
+
+        TranslationClipboardMonitor.Initialize();
     }
 }

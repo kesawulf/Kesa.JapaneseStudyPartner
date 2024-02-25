@@ -42,6 +42,7 @@
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.5" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
     <PackageReference Include="DeepL.net" Version="1.7.1" />
+    <PackageReference Include="FluentAvaloniaUI" Version="2.0.5" />
     <PackageReference Include="Google.Cloud.Speech.V1" Version="3.4.0" />
     <PackageReference Include="Google.Cloud.Translation.V2" Version="3.2.0" />
     <PackageReference Include="Google.Cloud.Vision.V1" Version="3.3.0" />

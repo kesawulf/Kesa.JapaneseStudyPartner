@@ -4,7 +4,8 @@
              xmlns:vm="clr-namespace:Kesa.Japanese.Features.Sentences"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="Kesa.Japanese.Features.Sentences.SentencesView">
+             x:Class="Kesa.Japanese.Features.Sentences.SentencesView"
+             x:DataType="vm:SentencesViewModel">
 
 	<Design.DataContext>
 		<vm:SentencesViewModel />
@@ -12,7 +13,7 @@
 
 	<DockPanel Margin="4">
 		<TextBox Margin="0,0,0,4" DockPanel.Dock="Top" Text="{Binding SearchText}" Watermark="Enter search here"/>
-		<Border BorderThickness="1" BorderBrush="Gray">
+		<Border BorderThickness="1" BorderBrush="Gray" CornerRadius="4">
 			<ScrollViewer VerticalScrollBarVisibility="Auto">
 				<ItemsControl ItemsSource="{Binding SentenceItems}">
 					<ItemsControl.ItemTemplate>

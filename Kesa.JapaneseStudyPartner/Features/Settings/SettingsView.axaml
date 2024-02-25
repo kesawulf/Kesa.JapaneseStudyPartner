@@ -4,7 +4,8 @@
              xmlns:vm="clr-namespace:Kesa.Japanese.Features.Settings"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="300"
-             x:Class="Kesa.Japanese.Features.Settings.SettingsView">
+             x:Class="Kesa.Japanese.Features.Settings.SettingsView"
+             x:DataType="vm:SettingsViewModel">
 
 	<Design.DataContext>
 		<vm:SettingsViewModel/>
@@ -15,12 +16,11 @@
 			<StackPanel Spacing="5" Orientation="Vertical">
 				<TextBlock Text="Google Credentials File Path"/>
 				<DockPanel>
-					<Button
-                        DockPanel.Dock="Right"
-                        Content="..." 
-						Command="{Binding PickGoogleCredentialsFilePathCommand}"
-                        Margin="4,0,0,0" 
-                        Padding="8,0,8,0"/>
+					<Button DockPanel.Dock="Right"
+                            Content="..." 
+                            Command="{Binding PickGoogleCredentialsFilePathCommand}"
+                            Margin="4,0,0,0" 
+                            Padding="8,0,8,0"/>
                     <TextBox VerticalAlignment="Center"
                              FontSize="16"
                              Text="{Binding CurrentGoogleCredentialsFilePath}"/>

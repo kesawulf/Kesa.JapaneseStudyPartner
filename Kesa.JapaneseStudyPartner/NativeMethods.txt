@@ -1,6 +1,4 @@
-﻿GetWindowLongPtr
-SetWindowLongPtr
-SetParent
+﻿SetParent
 AddClipboardFormatListener
 LRESULT
 WPARAM
@@ -9,3 +7,4 @@ CallWindowProc
 CallNextHookEx
 SetWindowSubclass
 DefSubclassProc
+GetAsyncKeyState
