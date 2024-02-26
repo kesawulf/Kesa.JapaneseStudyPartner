@@ -3,6 +3,7 @@ using Google.Cloud.Vision.V1;
 using Kesa.Japanese.Common;
 using Kesa.Japanese.Features.Main;
 using Kesa.Japanese.ThirdParty.DeepL;
+using Kesa.Japanese.ThirdParty.IchiMoe;
 using Kesa.Japanese.ThirdParty.Jisho;
 using System;
 
@@ -40,6 +41,9 @@ internal static class AppEnvironment
     public static SpeechClient SpeechClient { get; private set; }
 
     public static JishoClient JishoClient { get; private set; }
+
+    public static IchiMoeClient IchiMoeClient { get; private set; }
+
     #endregion
 
     public static KeyedDebounce Debounce { get; private set; }
@@ -65,6 +69,7 @@ internal static class AppEnvironment
             Settings = new AppSettings();
             DeepLClient = new DeepLClient();
             JishoClient = new JishoClient();
+            IchiMoeClient = new IchiMoeClient();
         }
 
         Settings.Reload();

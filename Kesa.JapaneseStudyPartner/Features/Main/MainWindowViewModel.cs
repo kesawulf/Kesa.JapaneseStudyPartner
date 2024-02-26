@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using Kesa.Japanese.Common;
 using Kesa.Japanese.Features.Dictionary;
+using Kesa.Japanese.Features.Segmentation;
 using Kesa.Japanese.Features.Sentences;
 using Kesa.Japanese.Features.Settings;
 using Kesa.Japanese.Features.Translation;
@@ -20,6 +21,9 @@ public partial class MainWindowViewModel : ViewModelBase
     public SentencesViewModel _sentencesViewModel;
 
     [ObservableProperty]
+    public SegmentationViewModel _segmentationViewModel;
+
+    [ObservableProperty]
     public SettingsViewModel _settingsViewModel;
 
     [ObservableProperty]
@@ -31,6 +35,7 @@ public partial class MainWindowViewModel : ViewModelBase
         DictionaryViewModel = new DictionaryViewModel();
         SentencesViewModel = new SentencesViewModel();
         SettingsViewModel = new SettingsViewModel();
+        SegmentationViewModel = new SegmentationViewModel();
 
         CurrentPage = TranslationViewModel;
     }
