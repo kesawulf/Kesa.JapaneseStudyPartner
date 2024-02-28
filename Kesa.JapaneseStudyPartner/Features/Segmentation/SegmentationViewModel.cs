@@ -8,18 +8,18 @@ namespace Kesa.Japanese.Features.Segmentation;
 
 public partial class SegmentationViewModel : ViewModelBase
 {
-    private string _searchText;
+    private string _sentenceText;
 
     public ObservableCollection<SegmentationItemViewModel> SegmentationItems { get; } = [];
 
-    public string SearchText
+    public string SentenceText
     {
-        get => _searchText;
+        get => _sentenceText;
         set
         {
-            if (SetProperty(ref _searchText, value))
+            if (SetProperty(ref _sentenceText, value))
             {
-                const string SearchKey = $"{nameof(SegmentationViewModel)}.{nameof(SearchText)}";
+                const string SearchKey = $"{nameof(SegmentationViewModel)}.{nameof(SentenceText)}";
 
                 AppEnvironment.Debounce.Cancel(SearchKey);
                 SegmentationItems.Clear();
@@ -38,50 +38,82 @@ public partial class SegmentationViewModel : ViewModelBase
     {
         SegmentationItems.Clear();
 
-        foreach (var result in AppEnvironment.IchiMoeClient.Query(SearchText))
+        try
         {
-            SegmentationItems.Add(new SegmentationItemViewModel(result));
+            foreach (var result in AppEnvironment.IchiMoeClient.Query(SentenceText))
+            {
+                SegmentationItems.Add(new SegmentationItemViewModel(result));
+            }
+        }
+        catch
+        {
+            //Do nothing
         }
     }
 }
 
-public partial class SegmentationItemViewModel(IchiMoeGloss gloss) : ViewModelBase
+public partial class SegmentationItemViewModel(IchiMoeEntry entry) : ViewModelBase
 {
     public string Text => GenerateText();
 
     public string GenerateText()
     {
         var result = new StringBuilder();
+        WriteEntry(result, 0, entry);
+        return HttpUtility.HtmlDecode(result.ToString().Trim());
+    }
 
-        result.AppendLine(gloss.Word);
+    private void WriteEntry(StringBuilder result, int indentation, IchiMoeEntry entry)
+    {
+        AppendLineIndented($"{entry.Text}");
 
-        foreach (var alt in gloss.Alternatives)
+        if (entry.CompoundDescription != null)
         {
-            result.Append($"  {alt}");
+            AppendLineIndentedBy(1, $"{entry.CompoundDescription}");
+            AppendLine();
+        }
+
+        if (entry.SuffixDescription != null)
+        {
+            AppendLineIndentedBy(1, entry.SuffixDescription);
+            AppendLine();
+        }
+
+        foreach (var compound in entry.Compounds)
+        {
+            WriteEntry(result, indentation + 1, compound);
         }
 
         var num = 0;
-        foreach (var conj in gloss.Conjugations)
+
+        foreach (var conj in entry.Conjugations)
         {
-            result.AppendLine();
-            result.AppendLine($"{conj.VerbType} {conj.ConjugationType}");
+            AppendLineIndentedBy(1, conj.IsNegative
+                ? $"{conj.VerbType} {conj.ConjugationType} (Negative)"
+                : $"{conj.VerbType} {conj.ConjugationType}");
 
-            num = 0;
-            foreach (var def in conj.Definitions)
+            foreach (var def in conj.Words)
             {
-                result.AppendLine($"  {++num}. {def.PartOfSpeech} {def.Description}");
+                WriteEntry(result, indentation + 1, def);
             }
-        }
 
-        result.AppendLine();
+            AppendLine();
+        }
 
         num = 0;
-        foreach (var def in gloss.Definitions)
+        foreach (var def in entry.Definitions)
         {
-            result.AppendLine($"{++num}. {def.PartOfSpeech} {def.Description}");
+            AppendLineIndentedBy(1, $"{++num}. {def.PartOfSpeech} {def.Description}");
         }
 
-        return HttpUtility.HtmlDecode(result.ToString().Trim());
+
+        void AppendLine() => result.AppendLine();
+
+        void AppendLineIndented(string text) => result.AppendLine($"{Indent(indentation)}{text}");
+
+        void AppendLineIndentedBy(int additional, string text) => result.AppendLine($"{Indent(indentation + additional)}{text}");
     }
+
+    private string Indent(int amount) => "".PadLeft(amount * 2, ' ');
 }
 

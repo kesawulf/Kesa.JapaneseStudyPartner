@@ -84,4 +84,6 @@ public static class Utilities
     public static HtmlNodeCollection SelectDivsExact(this HtmlNode node, string className) => node.SelectHtmlNodesExact("div", "class", className);
 
     public static HtmlNode SelectSingleDivExact(this HtmlNode node, string className) => node.SelectSingleHtmlNodeExact("div", "class", className);
+
+    public static string GetNodeInnerText(this HtmlNode node, string xpath) => node?.SelectSingleNode(xpath)?.InnerText.Trim();
 }

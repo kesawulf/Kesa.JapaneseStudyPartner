@@ -2,6 +2,7 @@
 using Kesa.Japanese.Common;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 
 namespace Kesa.Japanese.ThirdParty.IchiMoe;
@@ -10,120 +11,146 @@ public class IchiMoeClient
 {
     private HttpClient Client { get; } = new();
 
-    public IEnumerable<IchiMoeGloss> Query(string query)
+    public IEnumerable<IchiMoeEntry> Query(string query)
     {
         var url = $"https://ichi.moe/cl/qr/?q={Uri.EscapeDataString(query)}&r=htr";
         var doc = Client.GetHtmlAsync(url).GetAwaiter().GetResult();
 
         var glosses = doc.DocumentNode.SelectNodes("//div[contains(@class, 'gloss-all')]/div[@class='row gloss-row']/ul/li");
+        if (glosses == null)
+        {
+            yield break;
+        }
 
         foreach (var node in glosses)
         {
-            if (node.NodeType == HtmlNodeType.Element)
+            var alternativesNode = node.SelectSingleNode(".//dl[@class='alternatives']");
+            if (alternativesNode != null)
             {
-                yield return ParseGloss(node);
+                var entryNodes = IchiMoeEntry.GetDataNodes(alternativesNode).FirstOrDefault();
+                yield return IchiMoeEntry.Read(entryNodes.Text, entryNodes.Data);
             }
         }
 
         yield break;
     }
-
-    public IchiMoeGloss ParseGloss(HtmlNode glossEntryNode)
-    {
-        if (glossEntryNode != null)
-        {
-            var entry = new IchiMoeGloss
-            {
-                Id = glossEntryNode.GetAttributeValue("id", ""),
-                Word = glossEntryNode.SelectSingleNode(".//a[@class='info-link']/em")?.InnerText
-            };
-
-            var alternativesNode = glossEntryNode.SelectNodes(".//dl[@class='alternatives']/dt");
-            if (alternativesNode != null)
-            {
-                foreach (var alternativeNode in alternativesNode)
-                {
-                    entry.Alternatives.Add(alternativeNode.InnerText.Trim());
-                }
-            }
-
-            var definitionsNode = glossEntryNode.SelectSingleNode(".//ol[@class='gloss-definitions']");
-            var definitionsNodeChildren = definitionsNode?.SelectNodes("li");
-            if (definitionsNodeChildren != null)
-            {
-                foreach (var definitionNode in definitionsNodeChildren)
-                {
-                    var posDesc = definitionNode.SelectSingleNode(".//span[@class='pos-desc']").InnerText;
-                    var description = definitionNode.SelectSingleNode(".//span[@class='gloss-desc']").InnerText;
-                    entry.Definitions.Add(new IchiMoeGlossDefinition
-                    {
-                        PartOfSpeech = posDesc,
-                        Description = description
-                    });
-                }
-            }
-
-            var conjugationsNode = glossEntryNode.SelectSingleNode(".//div[@class='conjugations']");
-            var conjugationsNodeChildren = conjugationsNode?.SelectNodes(".//div[@class='conjugation']");
-            if (conjugationsNodeChildren != null)
-            {
-                foreach (var conjugationNode in conjugationsNodeChildren)
-                {
-                    var verbType = conjugationNode.SelectSingleNode(".//span[@class='pos-desc']").InnerText;
-                    var conjugationType = conjugationNode.SelectSingleNode(".//span[@class='conj-type']").InnerText;
-                    var conjugation = new IchiMoeConjugation
-                    {
-                        VerbType = verbType,
-                        ConjugationType = conjugationType
-                    };
-
-                    var conjugationDefinitionsNode = conjugationNode.SelectSingleNode(".//ol[@class='gloss-definitions']");
-                    if (conjugationDefinitionsNode != null)
-                    {
-                        foreach (var definitionNode in conjugationDefinitionsNode.SelectNodes("li"))
-                        {
-                            var posDesc = definitionNode.SelectSingleNode(".//span[@class='pos-desc']").InnerText;
-                            var description = definitionNode.SelectSingleNode(".//span[@class='gloss-desc']").InnerText;
-                            conjugation.Definitions.Add(new IchiMoeGlossDefinition
-                            {
-                                PartOfSpeech = posDesc,
-                                Description = description
-                            });
-                        }
-                    }
-
-                    entry.Conjugations.Add(conjugation);
-                }
-            }
-
-            return entry;
-        }
-
-        return null;
-    }
-}
-public class IchiMoeGloss
-{
-    public string Id { get; set; }
-
-    public string Word { get; set; }
-
-    public List<IchiMoeGlossDefinition> Definitions { get; set; } = [];
-
-    public List<IchiMoeConjugation> Conjugations { get; set; } = [];
-
-    public List<string> Alternatives { get; set; } = [];
-
-    public IchiMoeGloss()
-    {
-    }
 }
 
-public class IchiMoeGlossDefinition
+public class IchiMoeDefinition
 {
     public string PartOfSpeech { get; set; }
 
     public string Description { get; set; }
+}
+
+public class IchiMoeEntry
+{
+    public static IEnumerable<(HtmlNode Text, HtmlNode Data)> GetDataNodes(HtmlNode node)
+    {
+        foreach (var childNode in node.ChildNodes)
+        {
+            if (childNode.NodeType == HtmlNodeType.Element && childNode.Name == "dt")
+            {
+                var dataNode = childNode.NextSibling.NextSibling;
+                yield return (childNode, dataNode);
+            }
+        }
+    }
+
+    public static IEnumerable<IchiMoeDefinition> ReadDefinitions(HtmlNode definitionsNode)
+    {
+        if (definitionsNode?.SelectNodes("li") is { } definitionNodes)
+        {
+            foreach (var definitionNode in definitionNodes)
+            {
+                var posDesc = definitionNode.GetNodeInnerText("./span[@class='pos-desc']");
+                var description = definitionNode.GetNodeInnerText("./span[@class='gloss-desc']");
+
+                yield return new IchiMoeDefinition
+                {
+                    PartOfSpeech = posDesc,
+                    Description = description
+                };
+            }
+        }
+    }
+
+    public static IEnumerable<IchiMoeConjugation> ReadConjugations(HtmlNode conjugationsNode)
+    {
+        if (conjugationsNode?.SelectNodes("./div[@class='conjugation']") is { } conjugationNodes)
+        {
+            foreach (var conjugationNode in conjugationNodes)
+            {
+                var propertiesNode = conjugationNode.SelectSingleNode("./div[@class='conj-prop']");
+                var verbType = propertiesNode.GetNodeInnerText("./span[@class='pos-desc']");
+                var conjugationType = propertiesNode.GetNodeInnerText("./span[@class='conj-type']");
+                var conjugationNegative = propertiesNode.GetNodeInnerText("./span[@class='conj-negative']")?.Equals("Negative") ?? false;
+                var conjugation = new IchiMoeConjugation()
+                {
+                    VerbType = verbType,
+                    ConjugationType = conjugationType,
+                    IsNegative = conjugationNegative,
+                };
+
+                var conjugationGlossNodes = conjugationNode.SelectSingleNode("./div[@class='conj-gloss']/dl");
+                foreach (var conjPair in GetDataNodes(conjugationGlossNodes))
+                {
+                    var entry = Read(conjPair.Text, conjPair.Data);
+                    conjugation.Words.Add(entry);
+                }
+
+                yield return conjugation;
+            }
+        }
+    }
+
+    public string Text { get; set; }
+
+    public string CompoundDescription { get; set; }
+
+    public string SuffixDescription { get; set; }
+
+    public List<IchiMoeConjugation> Conjugations { get; set; } = [];
+
+    public List<IchiMoeDefinition> Definitions { get; set; } = [];
+
+    public List<IchiMoeEntry> Compounds { get; set; } = [];
+
+    public static IchiMoeEntry Read(HtmlNode text, HtmlNode data)
+    {
+        var entry = new IchiMoeEntry();
+
+        entry.Text = text.InnerText.ToString();
+
+        if (data.SelectSingleNode("./ol[@class='gloss-definitions']") is { } definitionsNode)
+        {
+            entry.Definitions.AddRange(ReadDefinitions(definitionsNode));
+        }
+
+        if (data.SelectSingleNode("./span[@class='suffix-desc']") is { } suffixNode)
+        {
+            entry.SuffixDescription = suffixNode.InnerText.Trim();
+        }
+
+        if (data.SelectSingleNode("./div[@class='conjugations']") is { } conjugationsNode)
+        {
+            entry.Conjugations.AddRange(ReadConjugations(conjugationsNode));
+        }
+
+        if (data.SelectSingleNode("./dl[@class='compounds']") is { } compoundsNode)
+        {
+            var compoundDescription = compoundsNode.PreviousSibling.PreviousSibling.InnerText.Trim();
+            entry.CompoundDescription = compoundDescription;
+
+            foreach (var compoundPair in GetDataNodes(compoundsNode))
+            {
+                var compoundEntry = Read(compoundPair.Text, compoundPair.Data);
+                entry.Compounds.Add(compoundEntry);
+            }
+        }
+
+        return entry;
+    }
 }
 
 public class IchiMoeConjugation
@@ -132,10 +159,12 @@ public class IchiMoeConjugation
 
     public string ConjugationType { get; set; }
 
-    public List<IchiMoeGlossDefinition> Definitions { get; set; }
+    public bool IsNegative { get; set; }
+
+    public List<IchiMoeEntry> Words { get; set; } = [];
 
     public IchiMoeConjugation()
     {
-        Definitions = new List<IchiMoeGlossDefinition>();
+        Words = new List<IchiMoeEntry>();
     }
 }
