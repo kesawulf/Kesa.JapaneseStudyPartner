@@ -51,7 +51,7 @@ public partial class SettingsViewModel : ViewModelBase
         settings.SaplingApiKey = CurrentSaplingApiKey;
         settings.Save();
 
-        AppEnvironment.MainWindowViewModel.TranslationViewModel.ReloadServices(false);
+        AppEnvironment.Initialize(AppEnvironment.MainWindow);
     }
 
     [RelayCommand]

@@ -1,25 +1,18 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using Avalonia.Threading;
+using CommunityToolkit.Mvvm.ComponentModel;
 using Kesa.Japanese.Common;
+using Kesa.Japanese.Features.Sentences;
 using System;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Kesa.Japanese.Features.Translation;
 
 public partial class TranslationViewModel : ViewModelBase
 {
-    [ObservableProperty]
-    private string _pronunciationText;
-
-    [ObservableProperty]
-    private string _outputText;
 
     [ObservableProperty]
     private bool _loadingTranslationService;
-
-    [ObservableProperty]
-    private string _lookupText;
 
     [ObservableProperty]
     private string _selectionInfo;
@@ -33,7 +26,7 @@ public partial class TranslationViewModel : ViewModelBase
         {
             if (SetProperty(ref _inputText, value))
             {
-                PronunciationText = "";
+                OutputDivisions = [];
                 OutputText = "";
 
                 const string TranslateInputTextKey = nameof(TranslateInputTextKey);
@@ -48,6 +41,12 @@ public partial class TranslationViewModel : ViewModelBase
             }
         }
     }
+
+    [ObservableProperty]
+    private string _outputText;
+
+    [ObservableProperty]
+    public JapaneseTextDivisionViewModel[] _outputDivisions;
 
     [ObservableProperty]
     private TranslationMicrophoneFeatureViewModel _microphoneFeature;
@@ -153,11 +152,18 @@ public partial class TranslationViewModel : ViewModelBase
             return;
         }
 
-        if (textToPronounce.Any(c => c.IsKanji()))
+        Dispatcher.UIThread.Invoke(() =>
         {
-            PronunciationText = textToPronounce.GetJapanesePronunciation();
-        }
-
-        OutputText = response;
+            if (isInputJapanese)
+            {
+                OutputDivisions = Utilities.DivideAndColorJapaneseText(text, null);
+                OutputText = response;
+            }
+            else
+            {
+                OutputDivisions = Utilities.DivideAndColorJapaneseText(response, null);
+                OutputText = "";
+            }
+        });
     }
 }

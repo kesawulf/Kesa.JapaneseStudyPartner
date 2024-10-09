@@ -25,6 +25,7 @@ public class DeepLClient
     {
         if (_translator == null)
         {
+            //TODO: throw + handle properly
             return "DeepL API Key missing.";
         }
 

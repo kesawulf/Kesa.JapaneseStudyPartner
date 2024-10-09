@@ -13,7 +13,7 @@ public static class TranslationClipboardMonitor
 
     public static void Initialize()
     {
-        if (AppEnvironment.MainWindow.GetVisualRoot() is not TopLevel window)
+        if (Design.IsDesignMode || AppEnvironment.MainWindow.GetVisualRoot() is not TopLevel window)
         {
             return;
         }
@@ -23,8 +23,7 @@ public static class TranslationClipboardMonitor
         _ = PInvoke.SetWindowSubclass(handle, OnSubclassCallback, nuint.Zero, nuint.Zero);
     }
 
-    private static LRESULT OnSubclassCallback(HWND hwnd, uint code, WPARAM wParam, LPARAM lParam, nuint ignored1,
-        nuint ignored2)
+    private static LRESULT OnSubclassCallback(HWND hwnd, uint code, WPARAM wParam, LPARAM lParam, nuint ignored1, nuint ignored2)
     {
         if (code == 0x31D)
         {

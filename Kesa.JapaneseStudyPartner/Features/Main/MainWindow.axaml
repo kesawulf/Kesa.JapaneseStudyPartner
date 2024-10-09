@@ -23,12 +23,13 @@
         ItemInvoked="Navigation_OnItemInvoked" 
         PaneDisplayMode="Left" 
         IsPaneToggleButtonVisible="False"
-        OpenPaneLength="140">
+        OpenPaneLength="180">
 		<controls:NavigationView.MenuItems>
 			<controls:NavigationViewItem Content="Translation" Tag="{Binding TranslationViewModel}"/>
 			<controls:NavigationViewItem Content="Dictionary" Tag="{Binding DictionaryViewModel}"/>
 			<controls:NavigationViewItem Content="Sentences" Tag="{Binding SentencesViewModel}"/>
-            <controls:NavigationViewItem Content="Segmentation" Tag="{Binding SegmentationViewModel}"/>
+			<controls:NavigationViewItem Content="Segmentation" Tag="{Binding SegmentationViewModel}"/>
+			<!--<controls:NavigationViewItem Content="WaniKani Export" Tag="{Binding WaniKaniExportViewModel}"/>-->			
 		</controls:NavigationView.MenuItems>
         <controls:Frame Content="{Binding CurrentPage}"/>
 	</controls:NavigationView>

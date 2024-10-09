@@ -5,9 +5,11 @@ using Avalonia.Markup.Xaml;
 using Kesa.Japanese.Features;
 using Kesa.Japanese.Features.Main;
 using Kesa.JapaneseStudyPartner.Features.Translation;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Kesa.Japanese;
 
+[RequiresUnreferencedCode("Avalonia BindingPlugins.DataValidators")]
 public partial class App : Application
 {
     public override void Initialize()

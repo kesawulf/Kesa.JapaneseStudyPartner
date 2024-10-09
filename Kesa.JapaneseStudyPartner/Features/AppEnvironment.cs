@@ -2,10 +2,13 @@
 using Google.Cloud.Vision.V1;
 using Kesa.Japanese.Common;
 using Kesa.Japanese.Features.Main;
+using Kesa.Japanese.ThirdParty.Anki;
 using Kesa.Japanese.ThirdParty.DeepL;
 using Kesa.Japanese.ThirdParty.IchiMoe;
 using Kesa.Japanese.ThirdParty.Jisho;
+using Kesa.WaniKaniApi;
 using System;
+using System.Net.Http;
 
 namespace Kesa.Japanese.Features;
 
@@ -34,6 +37,8 @@ internal static class AppEnvironment
     public static bool IsInitialized => _isFirstInitialization == false;
 
     #region Third Party APIs
+    public static HttpClient HttpClient { get; set; }
+
     public static DeepLClient DeepLClient { get; private set; }
 
     public static ImageAnnotatorClient AnnotationClient { get; private set; }
@@ -44,6 +49,9 @@ internal static class AppEnvironment
 
     public static IchiMoeClient IchiMoeClient { get; private set; }
 
+    public static AnkiConnectClient AnkiConnectClient { get; private set; }
+
+    public static WaniKaniClient WaniKaniClient { get; private set; }
     #endregion
 
     public static KeyedDebounce Debounce { get; private set; }
@@ -67,9 +75,11 @@ internal static class AppEnvironment
 
             Debounce = new KeyedDebounce();
             Settings = new AppSettings();
+            HttpClient = new HttpClient();
             DeepLClient = new DeepLClient();
             JishoClient = new JishoClient();
             IchiMoeClient = new IchiMoeClient();
+            AnkiConnectClient = new AnkiConnectClient();
         }
 
         Settings.Reload();
@@ -78,12 +88,17 @@ internal static class AppEnvironment
 
         AnnotationClient = ImageAnnotatorClient.Create();
         SpeechClient = SpeechClient.Create();
+        WaniKaniClient = new WaniKaniClient(HttpClient, Settings.WaniKaniApiKey);
 
         DeepLClient.ApiKey = Settings.DeepLApiKey;
 
         if (wasFirstInitialization)
         {
             Initialized?.Invoke();
+        }
+        else
+        {
+            MainWindowViewModel.TranslationViewModel?.ReloadServices(false);
         }
     }
 

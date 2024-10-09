@@ -6,6 +6,7 @@ using Kesa.Japanese.Features.Segmentation;
 using Kesa.Japanese.Features.Sentences;
 using Kesa.Japanese.Features.Settings;
 using Kesa.Japanese.Features.Translation;
+using Kesa.Japanese.Features.WaniKaniExport;
 
 namespace Kesa.Japanese.Features.Main;
 
@@ -24,6 +25,9 @@ public partial class MainWindowViewModel : ViewModelBase
     public SegmentationViewModel _segmentationViewModel;
 
     [ObservableProperty]
+    public WaniKaniExportViewModel _waniKaniExportViewModel;
+
+    [ObservableProperty]
     public SettingsViewModel _settingsViewModel;
 
     [ObservableProperty]
@@ -36,6 +40,7 @@ public partial class MainWindowViewModel : ViewModelBase
         SentencesViewModel = new SentencesViewModel();
         SettingsViewModel = new SettingsViewModel();
         SegmentationViewModel = new SegmentationViewModel();
+        WaniKaniExportViewModel = new WaniKaniExportViewModel();
 
         CurrentPage = TranslationViewModel;
     }

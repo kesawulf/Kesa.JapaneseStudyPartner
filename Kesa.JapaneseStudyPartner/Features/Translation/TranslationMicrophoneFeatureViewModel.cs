@@ -50,7 +50,6 @@ public partial class TranslationMicrophoneFeatureViewModel : ViewModelBase
         get
         {
             var image = new SvgImage();
-            var svg = new SvgSource();
 
             var path = MicrophoneState switch
             {
@@ -59,8 +58,7 @@ public partial class TranslationMicrophoneFeatureViewModel : ViewModelBase
                 TranslationMicrophoneFeatureMicrophoneState.Recording => "Assets.Icons.MicActive.svg",
                 _ => throw new ArgumentOutOfRangeException()
             };
-
-            svg.Load(Utilities.GetEmbeddedResourceStream(path));
+            var svg = SvgSource.LoadFromStream(Utilities.GetEmbeddedResourceStream(path));
             image.Source = svg;
             return image;
         }
@@ -177,29 +175,22 @@ public partial class TranslationMicrophoneFeatureViewModel : ViewModelBase
     private async Task HandleReceivedSpeechToText()
     {
         var stream = _activeCall.GetResponseStream();
-        var fullText = "";
+        var lastGuess = "";
 
         while (await stream.MoveNextAsync())
         {
             foreach (var result in stream.Current.Results)
             {
-                var text = result.Alternatives.First().Transcript;
-                string currentGuess;
-
-                if (result.IsFinal)
+                if (result.IsFinal || result.Stability > 0.35)
                 {
-                    fullText += text;
-                    currentGuess = "";
-                }
-                else
-                {
-                    currentGuess = text;
+                    lastGuess = result.Alternatives.First().Transcript;
                 }
 
-                AppEnvironment.SendMessage(TranslationMicrophoneFeatureMessages.MicrophoneInputReceived, fullText + currentGuess);
+                lastGuess = lastGuess.Replace(" ", "。");
+                AppEnvironment.SendMessage(TranslationMicrophoneFeatureMessages.MicrophoneInputReceived, lastGuess);
             }
         }
 
-        AppEnvironment.SendMessage(TranslationMicrophoneFeatureMessages.MicrophoneInputReceived, fullText);
+        AppEnvironment.SendMessage(TranslationMicrophoneFeatureMessages.MicrophoneInputReceived, lastGuess);
     }
 }

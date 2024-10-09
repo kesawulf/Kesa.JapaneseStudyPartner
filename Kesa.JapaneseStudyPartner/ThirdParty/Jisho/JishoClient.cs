@@ -1,11 +1,11 @@
 ﻿using HtmlAgilityPack;
 using Kesa.Japanese.Common;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Threading.Tasks;
 using System.Web;
 
 namespace Kesa.Japanese.ThirdParty.Jisho;
@@ -14,14 +14,14 @@ public class JishoClient
 {
     private HttpClient Client { get; } = new();
 
-    public JishoSentenceResponse[] SearchSentences(string query)
+    public async Task<JishoSentenceResponse[]> SearchSentencesAsync(string query, int page = 1)
     {
         var items = new List<JishoSentenceResponse>();
 
         try
         {
-            var url = $"https://jisho.org/search/{Uri.EscapeDataString(query)}%23sentences";
-            var doc = Client.GetHtmlAsync(url).GetAwaiter().GetResult();
+            var url = $"https://jisho.org/search/{Uri.EscapeDataString(query)}%23sentences?page={page}";
+            var doc = await Client.GetHtmlAsync(url);
 
             foreach (var node in doc.DocumentNode.SelectNodes("//div[contains(@class, 'sentence_content')]")?.ToArray() ?? [])
             {
@@ -36,8 +36,16 @@ public class JishoClient
                     }
                     else
                     {
-                        var nodeWithText = japaneseChildNode.SelectSingleNode("span[contains(@class, 'unlinked')]");
-                        japaneseText.Append(nodeWithText.InnerText);
+                        if (japaneseChildNode.SelectSingleNode("span[contains(@class, 'unlinked')]") is { } nodeWithText)
+                        {
+                            japaneseText.Append(nodeWithText.InnerText);
+                        }
+                        else if (true
+                            && japaneseChildNode.SelectSingleNode("span[contains(@class, 'furigana')]") is { } nodeWithFurigana
+                            && nodeWithFurigana.NextSibling is { Name: "a" } neighborWithText)
+                        {
+                            japaneseText.Append(neighborWithText.InnerText);
+                        }
                     }
                 }
 
@@ -45,7 +53,6 @@ public class JishoClient
                 items.Add(new JishoSentenceResponse()
                 {
                     JapaneseText = japaneseText.ToString().Trim(),
-                    PronunciationText = japaneseText.ToString().Trim().GetJapanesePronunciation(),
                     EnglishText = englishNode.InnerText.Trim()
                 });
             }
@@ -58,19 +65,14 @@ public class JishoClient
         return items.ToArray();
     }
 
-    public IEnumerable<JishoDefinitionResponse> SearchDefinitions(string query) => new JishoDefinitionResponseEnumerator(Client, query);
-}
-
-public class JishoDefinitionResponseEnumerator(HttpClient client, string query) : IEnumerable<JishoDefinitionResponse>
-{
-    public IEnumerable<JishoDefinitionResponse> GetResults(int page)
+    public async Task<JishoDefinitionResponse[]> SearchDefinitionsAsync(string query, int page = 1)
     {
         var items = new List<JishoDefinitionResponse>();
 
         try
         {
             var url = $"https://jisho.org/search/{HttpUtility.UrlPathEncode(query)}?page={page}";
-            var doc = client.GetHtmlAsync(url).GetAwaiter().GetResult();
+            var doc = await Client.GetHtmlAsync(url);
 
             var nodes = doc.DocumentNode.SelectNodes("//div[contains(@class, 'concept_light-meanings')]")
                 ?.Select(node => node.ParentNode)
@@ -150,35 +152,6 @@ public class JishoDefinitionResponseEnumerator(HttpClient client, string query) 
 
         return (text.ToString(), pronunciation.ToString());
     }
-
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-    public IEnumerator<JishoDefinitionResponse> GetEnumerator()
-    {
-        int page = 1;
-        int count = 0;
-
-        while (true)
-        {
-            foreach (var result in GetResults(page))
-            {
-                yield return result;
-                count++;
-            }
-
-            yield break;
-
-            //if (count > 0)
-            //{
-            //    page++;
-            //    count = 0;
-            //}
-            //else
-            //{
-            //    yield break;
-            //}
-        }
-    }
 }
 
 public class JishoDefinitionResponse
@@ -193,8 +166,6 @@ public class JishoDefinitionResponse
 public class JishoSentenceResponse
 {
     public string JapaneseText { get; set; }
-
-    public string PronunciationText { get; set; }
 
     public string EnglishText { get; set; }
 }

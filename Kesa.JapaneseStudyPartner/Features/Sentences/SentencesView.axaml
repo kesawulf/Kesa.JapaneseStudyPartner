@@ -12,15 +12,32 @@
 	</Design.DataContext>
 
 	<DockPanel Margin="4">
-		<TextBox Margin="0,0,0,4" DockPanel.Dock="Top" Text="{Binding SearchText}" Watermark="Enter search here"/>
+		<TextBox Margin="0,0,0,4" DockPanel.Dock="Top" Text="{Binding SearchText}" FontSize="20" Watermark="Enter search here"/>
 		<Border BorderThickness="1" BorderBrush="Gray" CornerRadius="4">
-			<ScrollViewer VerticalScrollBarVisibility="Auto">
+			<ScrollViewer x:Name="ScrollViewer" VerticalScrollBarVisibility="Auto">
 				<ItemsControl ItemsSource="{Binding SentenceItems}">
 					<ItemsControl.ItemTemplate>
 						<DataTemplate>
-							<StackPanel>
-								<TextBox IsReadOnly="true" Text="{Binding Text}"/>
-							</StackPanel>
+							<ScrollViewer>
+								<StackPanel Orientation="Vertical" Margin="4">
+									<ItemsControl ItemsSource="{Binding SentenceDivisions}">
+										<ItemsControl.ItemsPanel>
+											<ItemsPanelTemplate>
+												<StackPanel Orientation="Horizontal"/>
+											</ItemsPanelTemplate>
+										</ItemsControl.ItemsPanel>
+										<ItemsControl.ItemTemplate>
+											<DataTemplate DataType="{x:Type vm:JapaneseTextDivisionViewModel}">
+												<StackPanel Orientation="Vertical">
+													<TextBlock Text="{Binding FuriganaText}" Foreground="{Binding Foreground}" HorizontalAlignment="Center"/>
+													<TextBlock Text="{Binding JapaneseText}" Foreground="{Binding Foreground}" HorizontalAlignment="Center" FontSize="20"/>
+												</StackPanel>
+											</DataTemplate>
+										</ItemsControl.ItemTemplate>
+									</ItemsControl>
+									<TextBlock Text="{Binding EnglishText}"/>
+								</StackPanel>
+							</ScrollViewer>
 						</DataTemplate>
 					</ItemsControl.ItemTemplate>
 				</ItemsControl>
